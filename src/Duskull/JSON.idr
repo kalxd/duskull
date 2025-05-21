@@ -16,3 +16,6 @@ ToJSON String where
 
 ToJSON Double where
     toJSON = JNumber
+
+ToJSON a => ToJSON (List (String, a)) where
+    toJSON = JObject . (map $ \(k, v) => (k, toJSON v))
