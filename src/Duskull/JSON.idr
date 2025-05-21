@@ -19,3 +19,13 @@ ToJSON Double where
 
 ToJSON a => ToJSON (List (String, a)) where
     toJSON = JObject . (map $ \(k, v) => (k, toJSON v))
+
+data JSONPair : Type where
+     (.=) : ToJSON a => String -> a -> JSONPair
+
+infix 7 .=
+
+ToJSON (List JSONPair) where
+    toJSON = JObject . map f
+        where f : JSONPair -> (String, JSON)
+              f ((.=) k v) = (k, toJSON v)
