@@ -18,6 +18,10 @@ ToJSON String where
 ToJSON Double where
     toJSON = JNumber
 
+ToJSON Integer where
+    toJSON = toJSON . cast {to=Double}
+
+public export
 data JSONPair : Type where
      (.=) : ToJSON a => String -> a -> JSONPair
 
