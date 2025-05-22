@@ -2,7 +2,8 @@ module Duskull.JSON
 
 import Language.JSON.Data
 
-interface ToJSON a where
+public export
+interface ToJSON (0 a: Type) where
     toJSON : a -> JSON
 
 ToJSON JSON where
@@ -17,15 +18,11 @@ ToJSON String where
 ToJSON Double where
     toJSON = JNumber
 
-ToJSON a => ToJSON (List (String, a)) where
-    toJSON = JObject . (map $ \(k, v) => (k, toJSON v))
-
 data JSONPair : Type where
      (.=) : ToJSON a => String -> a -> JSONPair
 
 infix 7 .=
 
-ToJSON (List JSONPair) where
-    toJSON = JObject . map f
-        where f : JSONPair -> (String, JSON)
-              f ((.=) k v) = (k, toJSON v)
+export
+object : List JSONPair -> JSON
+object = JObject . (map $ \((.=) k v) => (k, toJSON v))
