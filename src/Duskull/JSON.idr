@@ -9,9 +9,6 @@ interface ToJSON (0 a: Type) where
 ToJSON JSON where
     toJSON = id
 
-ToJSON a => ToJSON (List a) where
-    toJSON = JArray . map toJSON
-
 ToJSON String where
     toJSON = JString
 
@@ -20,6 +17,13 @@ ToJSON Double where
 
 ToJSON Integer where
     toJSON = toJSON . cast {to=Double}
+
+ToJSON a => ToJSON (List a) where
+    toJSON = JArray . map toJSON
+
+ToJSON a => ToJSON (Maybe a) where
+    toJSON (Just a) = toJSON a
+    toJSON _ = JNull
 
 public export
 data JSONPair : Type where
