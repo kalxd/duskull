@@ -30,3 +30,11 @@ infix 7 .=
 export
 object : List JSONPair -> JSON
 object = JObject . (map $ \((.=) k v) => (k, toJSON v))
+
+export
+emptyArray : JSON
+emptyArray = JArray []
+
+public export
+interface FromJSON a where
+    fromJSON : JSON -> a
