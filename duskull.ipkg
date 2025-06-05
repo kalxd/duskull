@@ -19,10 +19,10 @@ depends = contrib
 modules = Duskull.JSON
 
 -- main file (i.e. file to load at REPL)
--- main =
+-- main = Main
 
 -- name of executable
--- executable =
+-- executable = "main.rkt"
 -- opts =
 sourcedir = "src"
 -- builddir =

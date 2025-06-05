@@ -1,5 +1,12 @@
 module Duskull.JSON
 
+import Data.List
+import Data.Either
+import Data.String
+import Control.Monad.Writer
+import Control.Monad.Either
+import Control.Monad.Identity
+import Language.JSON
 import Language.JSON.Data
 
 public export
@@ -39,6 +46,19 @@ export
 emptyArray : JSON
 emptyArray = JArray []
 
+export
+Parser : (a: Type) -> Type
+Parser = EitherT String (Writer (List String))
+
 public export
 interface FromJSON a where
-    fromJSON : JSON -> a
+    fromJSON : JSON -> Parser a
+
+export
+decode : FromJSON a => String -> Either String a
+decode input = do
+    json <- maybeToEither "不是有效的JSON字符串！" $ parse input
+    let (result, paths) = runWriter $ runEitherT $ fromJSON {a=a} json
+    case result of
+        Right a => pure a
+        Left e => Left $ "在\{joinBy "," paths}处解析失呚：\{e}"
