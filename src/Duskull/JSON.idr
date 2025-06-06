@@ -59,10 +59,12 @@ FromJSON String where
     fromJSON (JString s) = pure s
     fromJSON _ = throwE "不是有效字符串。"
 
+export
 FromJSON Double where
     fromJSON (JNumber n) = pure n
     fromJSON _ = throwE "不是有效数字。"
 
+export
 FromJSON a => FromJSON (List a) where
     fromJSON (JArray xs) = traverse fromJSON xs
     fromJSON _ = throwE "不是有效数组。"
