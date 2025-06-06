@@ -16,13 +16,14 @@ authors = "XG.Ley"
 depends = contrib
 
 -- modules to install
-modules = Duskull.JSON
+modules = Duskull.Trace
+        , Duskull.JSON
 
 -- main file (i.e. file to load at REPL)
--- main = Main
+main = Main
 
 -- name of executable
--- executable = "main.rkt"
+executable = "main.rkt"
 -- opts =
 sourcedir = "src"
 -- builddir =

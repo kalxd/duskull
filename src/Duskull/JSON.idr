@@ -55,10 +55,17 @@ interface FromJSON a where
     fromJSON : JSON -> Parser a
 
 export
+FromJSON String where
+    fromJSON (JString s) = pure s
+    fromJSON _ = throwE "不是有效字符串。"
+
+export
 decode : FromJSON a => String -> Either String a
 decode input = do
     json <- maybeToEither "不是有效的JSON字符串！" $ parse input
-    let (result, paths) = runWriter $ runEitherT $ fromJSON {a=a} json
+    let (result, paths) = runWriter $ runEitherT $ fromJSON json
     case result of
         Right a => pure a
-        Left e => Left $ "在\{joinBy "," paths}处解析失呚：\{e}"
+        Left e => Left $ case paths of
+            [] => "解析失败：\{e}"
+            xs => "在\{joinBy "," xs}解析失败：\{e}"
