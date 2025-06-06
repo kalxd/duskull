@@ -59,10 +59,18 @@ FromJSON String where
     fromJSON (JString s) = pure s
     fromJSON _ = throwE "不是有效字符串。"
 
+FromJSON Double where
+    fromJSON (JNumber n) = pure n
+    fromJSON _ = throwE "不是有效数字。"
+
+FromJSON a => FromJSON (List a) where
+    fromJSON (JArray xs) = traverse fromJSON xs
+    fromJSON _ = throwE "不是有效数组。"
+
 export
 decode : FromJSON a => String -> Either String a
 decode input = do
-    json <- maybeToEither "不是有效的JSON字符串！" $ parse input
+    json <- maybeToEither "不是有效JSON字符串！" $ parse input
     let (result, paths) = runWriter $ runEitherT $ fromJSON json
     case result of
         Right a => pure a
