@@ -70,16 +70,36 @@ FromJSON a => FromJSON (List a) where
     fromJSON _ = throwE "不是有效数组。"
 
 export
+FromJSON a => FromJSON (Maybe a) where
+    fromJSON JNull = pure Nothing
+    fromJSON x = Just <$> fromJSON x
+
+fromJSONEither : FromJSON a => JSON -> Either String a
+fromJSONEither json = let (result, paths) = runWriter $ runEitherT $ fromJSON json
+                      in case result of
+                          Right a => pure a
+                          Left e => Left $ case paths of
+                              [] => "解板失败：\{e}"
+                              _ => "在\{joinBy "," paths}解析失败：\{e}"
+
+export
 decode : FromJSON a => String -> Either String a
 decode input = do
     json <- maybeToEither "不是有效JSON字符串！" $ parse input
-    let (result, paths) = runWriter $ runEitherT $ fromJSON json
-    case result of
-        Right a => pure a
-        Left e => Left $ case paths of
-            [] => "解析失败：\{e}"
-            xs => "在\{joinBy "," xs}解析失败：\{e}"
+    fromJSONEither json
 
 export
 decode' : FromJSON a => String -> Maybe a
 decode' = eitherToMaybe . decode
+
+
+infixl 6 .:
+export
+(.:) : FromJSON a => List (String, JSON) -> String -> Parser a
+obj .: key = case lookup key obj of
+    Just a => fromJSON a
+    _ => throwE "不存在\{key}的键！"
+
+infixl 6 .:?
+(.:?) : FromJSON a => List (String, JSON) -> String -> Parser (Maybe a)
+obj .:? key = Just <$> ((.:) {a=a} obj key) `catchE` (\_ => pure Nothing)
