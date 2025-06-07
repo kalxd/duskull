@@ -79,3 +79,7 @@ decode input = do
         Left e => Left $ case paths of
             [] => "解析失败：\{e}"
             xs => "在\{joinBy "," xs}解析失败：\{e}"
+
+export
+decode' : FromJSON a => String -> Maybe a
+decode' = eitherToMaybe . decode
