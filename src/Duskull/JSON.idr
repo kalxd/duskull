@@ -104,6 +104,12 @@ infixl 6 .:?
 (.:?) : FromJSON a => List (String, JSON) -> String -> Parser (Maybe a)
 obj .:? key = Just <$> ((.:) {a=a} obj key) `catchE` (\_ => pure Nothing)
 
+infixl 7 .:=
+(.:=) : Parser (Maybe a) -> a -> Parser a
+ma .:= a = case !ma of
+    Just x => pure x
+    Nothing => pure a
+
 export
 withObject : FromJSON a => String -> (List (String, JSON) -> Parser a) -> JSON -> Parser a
 withObject path p json = do
