@@ -9,6 +9,12 @@ import Control.Monad.Identity
 import Language.JSON
 import Language.JSON.Data
 
+import public Language.JSON as Duskull.JSON
+import public Language.JSON.Data as Duskull.JSON
+import public Control.Monad.Either as Duskull.JSON
+import public Control.Monad.Writer as Duskull.JSON
+import public Control.Monad.Identity as Duskull.JSON
+
 public export
 interface ToJSON (0 a: Type) where
     toJSON : a -> JSON
@@ -46,7 +52,7 @@ export
 emptyArray : JSON
 emptyArray = JArray []
 
-export
+public export
 Parser : (a: Type) -> Type
 Parser = EitherT String (Writer (List String))
 
@@ -92,7 +98,6 @@ export
 decode' : FromJSON a => String -> Maybe a
 decode' = eitherToMaybe . decode
 
-
 infixl 6 .:
 export
 (.:) : FromJSON a => List (String, JSON) -> String -> Parser a
@@ -101,10 +106,12 @@ obj .: key = case lookup key obj of
     _ => throwE "不存在\{key}的键！"
 
 infixl 6 .:?
+export
 (.:?) : FromJSON a => List (String, JSON) -> String -> Parser (Maybe a)
-obj .:? key = Just <$> ((.:) {a=a} obj key) `catchE` (\_ => pure Nothing)
+obj .:? key = Just <$> ((.:) obj key) `catchE` (\_ => pure Nothing)
 
-infixl 7 .:=
+infixl 5 .:=
+export
 (.:=) : Parser (Maybe a) -> a -> Parser a
 ma .:= a = case !ma of
     Just x => pure x
@@ -117,3 +124,14 @@ withObject path p json = do
     case json of
         JObject xs => p xs
         _ => throwE "无效的Object!"
+
+record User where
+    constructor MkUser
+    name : String
+    age : Double
+
+FromJSON User where
+    fromJSON = withObject "user" $ \o => do
+        name <- o .: "name"
+        age <- o .: "age"
+        pure $ MkUser name age
