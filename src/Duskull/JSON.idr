@@ -103,3 +103,11 @@ obj .: key = case lookup key obj of
 infixl 6 .:?
 (.:?) : FromJSON a => List (String, JSON) -> String -> Parser (Maybe a)
 obj .:? key = Just <$> ((.:) {a=a} obj key) `catchE` (\_ => pure Nothing)
+
+export
+withObject : FromJSON a => String -> (List (String, JSON) -> Parser a) -> JSON -> Parser a
+withObject path p json = do
+    tell [path]
+    case json of
+        JObject xs => p xs
+        _ => throwE "无效的Object!"
