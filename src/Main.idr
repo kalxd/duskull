@@ -1,8 +1,10 @@
 module Main
 
-import Duskull.Trace
-import Duskull.JSON
+-- import Duskull.Trace
+-- import Duskull.JSON
+import Duskull.FFI
 
+{-
 record User where
     constructor MkUser
     name : String
@@ -24,3 +26,4 @@ Debug User where
 
 main : IO ()
 main = printLnDebug $ decode {a=User} rawInput
+-}

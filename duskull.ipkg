@@ -16,8 +16,7 @@ authors = "XG.Ley"
 depends = contrib
 
 -- modules to install
-modules = Duskull.Trace
-        , Duskull.JSON
+modules = Duskull.FFI
 
 -- main file (i.e. file to load at REPL)
 main = Main
