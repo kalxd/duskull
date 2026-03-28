@@ -1,15 +1,14 @@
 module Duskull.Scraper.Selector
 
 import Duskull.FFI
-import Duskull.Scraper.Result
 
 %default total
 
-export
+public export
 data Selector : Type where
 
 %foreign (loadlib "selector_create")
-prim__selectorCreate : String -> Ptr (Result (Ptr Selector))
+prim__selectorCreate : String -> Ptr (Result AnyPtr)
 
 %foreign (loadlib "selector_free")
 prim__selectorFree : Ptr Selector -> PrimIO ()

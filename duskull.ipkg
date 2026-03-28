@@ -17,7 +17,6 @@ depends = contrib
 
 -- modules to install
 modules = Duskull.FFI
-        , Duskull.Scraper.Result
         , Duskull.Scraper.Selector
         , Duskull.Scraper
 
