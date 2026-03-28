@@ -10,13 +10,13 @@ record User where
 
 rawInput : String
 rawInput = ##"""
-{"name": "hello world"}
+{"name": "你好啊", "age": ""}
 """##
 
 FromJSON User where
     fromJSON = withObject "user" $ \o => do
         name <- o .: "name"
-        age <- o .:? "age" .:= 10.0
+        age <- o .: "age"
         pure $ MkUser name age
 
 Debug User where
