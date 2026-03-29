@@ -4,22 +4,26 @@ import Duskull.FFI
 
 %default total
 
-public export
-data Selector : Type where
+data SelectorPtr : Type where
+
+export
+record Selector where
+    constructor MkSelector
+    ptr: GCPtr SelectorPtr
 
 %foreign (loadlib "selector_create")
 prim__selectorCreate : String -> Ptr (Result AnyPtr)
 
 %foreign (loadlib "selector_free")
-prim__selectorFree : Ptr Selector -> PrimIO ()
+prim__selectorFree : Ptr SelectorPtr -> PrimIO ()
 
 %foreign (loadlib "selector_dbg")
-prim__selectorDbg : GCPtr Selector -> PrimIO ()
+prim__selectorDbg : GCPtr SelectorPtr -> PrimIO ()
 
-dbg : GCPtr Selector -> IO ()
-dbg = primIO . prim__selectorDbg
+dbg : Selector -> IO ()
+dbg (MkSelector ptr) = primIO $ prim__selectorDbg ptr
 
-free : Ptr Selector -> IO ()
+free : Ptr SelectorPtr -> IO ()
 free = primIO . prim__selectorFree
 
 ||| 创建选择器。支持css selectorg语法。
@@ -29,10 +33,10 @@ free = primIO . prim__selectorFree
 ||| ```
 |||
 export
-mkSelector : String -> IO (Either String (GCPtr Selector))
+mkSelector : String -> IO (Either String Selector)
 mkSelector css =
     case unpackResult $ prim__selectorCreate css of
-        Right selector => Right <$> onCollect selector free
+        Right selector => (Right . MkSelector) <$> onCollect selector free
         Left e => pure $ Left e
 
 main : IO ()
