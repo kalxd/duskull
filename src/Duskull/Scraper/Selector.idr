@@ -4,9 +4,10 @@ import Duskull.FFI
 
 %default total
 
+export
 data SelectorPtr : Type where
 
-export
+public export
 record Selector where
     constructor MkSelector
     ptr: GCPtr SelectorPtr
