@@ -4,8 +4,6 @@ import Duskull.FFI
 import Duskull.Scraper.Selector
 import Duskull.Scraper.Element
 
-import System.File
-
 %default total
 
 data HtmlPtr : Type where
@@ -81,12 +79,30 @@ select (MkHtml htmlPtr) css = do
             pure $ Right xs
 
 covering
+export
+select1 : Html -> String -> IO (Either String (Maybe Element))
+select1 (MkHtml htmlPtr) css = do
+    selector <- mkSelector css
+    case selector of
+        Left e => pure $ Left e
+        Right (MkSelector selectorPtr) => do
+            let select = prim__htmlSelect htmlPtr selectorPtr
+                item = prim__htmlSelectNext select
+            if prim__nullPtr item == 1
+                then pure $ Right Nothing
+                else Right . Just <$> castToElement item
+
+covering
 main : IO ()
 main = do
-    content <- readFile "index.html"
-    case content of
-        Right content => do
-            doc <- mkDocument content
-            el <- select doc "header"
-            putStrLn $ show $ length <$> el
-        Left e => putStrLn $ show e
+    doc <- mkFragment """
+    <button id="yes" go=1>button</button>
+    """
+    el <- select1 doc "button"
+    case el of
+        Left e => putStrLn e
+        Right el => do
+            printLn $ elementId =<< el
+            printLn $ elementAttr "go" =<< el
+            printLn $ elementAttr "unknown" =<< el
+
