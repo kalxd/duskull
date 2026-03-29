@@ -57,31 +57,36 @@ dbg (MkHtml ptr) = primIO $ prim__dbg ptr
 freeSelect : Ptr SelectPtr -> IO ()
 freeSelect = primIO . prim__htmlSelectFree
 
-partial
+covering
 reduceSelectToList : List Element -> Ptr SelectPtr -> IO (List Element)
 reduceSelectToList acc ptr = do
     let item = prim__htmlSelectNext ptr
     case prim__nullPtr item of
-        0 => pure acc
+        1 => pure acc
         _ => do
             el <- castToElement item
             reduceSelectToList (acc ++ [el]) ptr
 
-partial
+covering
 export
-select : Html -> Selector -> IO (List Element)
-select (MkHtml htmlPtr) (MkSelector selectorPtr) =
-    let select = prim__htmlSelect htmlPtr selectorPtr
-    in do xs <- reduceSelectToList [] select
-          freeSelect select
-          pure xs
+select : Html -> String -> IO (Either String (List Element))
+select (MkHtml htmlPtr) css = do
+    selector <- mkSelector css
+    case selector of
+        Left e => pure $ Left e
+        Right (MkSelector selectorPtr) => do
+            let select = prim__htmlSelect htmlPtr selectorPtr
+            xs <- reduceSelectToList [] select
+            freeSelect select
+            pure $ Right xs
 
-partial
+covering
 main : IO ()
 main = do
     content <- readFile "index.html"
     case content of
         Right content => do
             doc <- mkDocument content
-            dbg doc
+            el <- select doc "header"
+            putStrLn $ show $ length <$> el
         Left e => putStrLn $ show e
