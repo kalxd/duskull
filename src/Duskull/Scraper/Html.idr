@@ -4,6 +4,8 @@ import Duskull.FFI
 import Duskull.Scraper.Selector
 import Duskull.Scraper.Element
 
+import System.File
+
 %default total
 
 data HtmlPtr : Type where
@@ -18,7 +20,7 @@ data SelectPtr : Type where
 %foreign (loadlib "html_free")
 prim__free : Ptr HtmlPtr -> PrimIO ()
 
-%foreign (loadlib "html_parse_document")
+%foreign (loadlib "html_parse_doc")
 prim__parseDocument : String -> Ptr HtmlPtr
 
 %foreign (loadlib "html_parse_fragment")
@@ -57,13 +59,13 @@ freeSelect = primIO . prim__htmlSelectFree
 
 partial
 reduceSelectToList : List Element -> Ptr SelectPtr -> IO (List Element)
-reduceSelectToList acc ptr =
+reduceSelectToList acc ptr = do
     let item = prim__htmlSelectNext ptr
-    in if prim__nullPtr item == 0
-       then pure acc
-       else do
-           el <- castToElement item
-           reduceSelectToList (acc ++ [el]) ptr
+    case prim__nullPtr item of
+        0 => pure acc
+        _ => do
+            el <- castToElement item
+            reduceSelectToList (acc ++ [el]) ptr
 
 partial
 export
@@ -74,5 +76,12 @@ select (MkHtml htmlPtr) (MkSelector selectorPtr) =
           freeSelect select
           pure xs
 
+partial
 main : IO ()
-main = mkFragment "<button>yes</button>" >>= dbg
+main = do
+    content <- readFile "index.html"
+    case content of
+        Right content => do
+            doc <- mkDocument content
+            dbg doc
+        Left e => putStrLn $ show e
