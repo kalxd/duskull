@@ -40,12 +40,12 @@ free : Ptr HtmlPtr -> IO ()
 free = primIO . prim__free
 
 export
-mkDocument : String -> IO Html
+mkDocument : HasIO io => String -> io Html
 mkDocument css = let ptr = prim__parseDocument css
                  in MkHtml <$> onCollect ptr free
 
 export
-mkFragment : String -> IO Html
+mkFragment : HasIO io => String -> io Html
 mkFragment css = let ptr = prim__parseFragment css
                  in MkHtml <$> onCollect ptr free
 
@@ -67,8 +67,8 @@ reduceSelectToList acc ptr = do
 
 covering
 export
-select : Html -> String -> IO (Either String (List Element))
-select (MkHtml htmlPtr) css = do
+select : String -> Html -> IO (Either String (List Element))
+select css (MkHtml htmlPtr) = do
     selector <- mkSelector css
     case selector of
         Left e => pure $ Left e
@@ -80,8 +80,8 @@ select (MkHtml htmlPtr) css = do
 
 covering
 export
-select1 : Html -> String -> IO (Either String (Maybe Element))
-select1 (MkHtml htmlPtr) css = do
+select1 : String -> Html -> IO (Either String (Maybe Element))
+select1 css (MkHtml htmlPtr) = do
     selector <- mkSelector css
     case selector of
         Left e => pure $ Left e
@@ -98,7 +98,7 @@ main = do
     doc <- mkFragment """
     <button id="yes" go=1>button</button>
     """
-    el <- select1 doc "h1"
+    el <- select1 "h1" doc
     case el of
         Left e => putStrLn e
         Right el => do

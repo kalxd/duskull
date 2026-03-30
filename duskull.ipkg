@@ -21,6 +21,7 @@ modules = Duskull.FFI
         , Duskull.Scraper.Element
         , Duskull.Scraper.Html
         , Duskull.Scraper
+        , Duskull.Control.Scraper
 
 -- main file (i.e. file to load at REPL)
 main = Main

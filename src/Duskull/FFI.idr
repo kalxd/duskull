@@ -26,3 +26,8 @@ unpackResult val =
     case prim__resultIsError $ val of
         1 => Left $ prim__resultErrorMsg val
         _ => Right $ prim__castPtr $ prim__resultValue val
+
+public export
+data FFIError : Type where
+    IOError : String -> FFIError
+    ParseError : String -> FFIError

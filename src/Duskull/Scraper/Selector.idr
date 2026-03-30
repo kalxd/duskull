@@ -34,7 +34,7 @@ free = primIO . prim__selectorFree
 ||| ```
 |||
 export
-mkSelector : String -> IO (Either String Selector)
+mkSelector : HasIO io => String -> io (Either String Selector)
 mkSelector css =
     case unpackResult $ prim__selectorCreate css of
         Right selector => (Right . MkSelector) <$> onCollect selector free
