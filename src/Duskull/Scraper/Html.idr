@@ -98,7 +98,7 @@ main = do
     doc <- mkFragment """
     <button id="yes" go=1>button</button>
     """
-    el <- select1 doc "button"
+    el <- select1 doc "h1"
     case el of
         Left e => putStrLn e
         Right el => do
