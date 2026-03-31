@@ -28,7 +28,7 @@ prim__parseFragment : String -> Ptr HtmlPtr
 prim__htmlSelectFree : Ptr SelectPtr -> PrimIO ()
 
 %foreign (loadlib "html_select")
-prim__htmlSelect: GCPtr HtmlPtr -> GCPtr SelectorPtr -> Ptr SelectPtr
+prim__htmlSelect : GCPtr SelectorPtr -> GCPtr HtmlPtr -> Ptr SelectPtr
 
 %foreign (loadlib "html_select_next")
 prim__htmlSelectNext: Ptr SelectPtr -> Ptr ElementPtr
@@ -73,7 +73,7 @@ select css (MkHtml htmlPtr) = do
     case selector of
         Left e => pure $ Left e
         Right (MkSelector selectorPtr) => do
-            let select = prim__htmlSelect htmlPtr selectorPtr
+            let select = prim__htmlSelect selectorPtr htmlPtr
             xs <- reduceSelectToList [] select
             freeSelect select
             pure $ Right xs
@@ -86,7 +86,7 @@ select1 css (MkHtml htmlPtr) = do
     case selector of
         Left e => pure $ Left e
         Right (MkSelector selectorPtr) => do
-            let select = prim__htmlSelect htmlPtr selectorPtr
+            let select = prim__htmlSelect selectorPtr htmlPtr
                 item = prim__htmlSelectNext select
             if prim__nullPtr item == 1
                 then pure $ Right Nothing
