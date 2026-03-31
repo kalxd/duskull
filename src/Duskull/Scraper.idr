@@ -58,3 +58,14 @@ runFragment : HasIO m => String -> ReaderT Html m a -> m a
 runFragment str x = do
     doc <- mkFragment str
     runReaderT doc x
+
+export
+attr : MonadReader Element m => String -> m (Maybe String)
+attr name = pure $ elementAttr name !ask
+
+export
+attr' : (MonadReader Element m, MonadError IOError m) => String -> m String
+attr' name =
+    case !(attr name) of
+        Just a => pure a
+        Nothing => throwError $ MkIOError $ "属性(" ++ name ++ ")不存在！"
