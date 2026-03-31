@@ -36,6 +36,17 @@ Nodeable Html where
               | Left e => throwError $ MkIOError e
         pure x
 
+Nodeable Element where
+    select css el = do
+        Right xs <- liftIO $ Duskull.Scraper.Element.select css el
+              | Left e => throwError $ MkIOError e
+        pure xs
+
+    select1 css el = do
+        Right x <- liftIO $ Duskull.Scraper.Element.select1 css el
+              | Left e => throwError $ MkIOError e
+        pure x
+
 export
 runDocument : HasIO m => String -> ReaderT Html m a -> m a
 runDocument str x = do
