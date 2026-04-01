@@ -17,35 +17,13 @@ record IOError where
 Show IOError where
     show  e = "ScraperError: " ++ e.msg
 
-public export
-interface Nodeable a where
-    covering
-    select : (HasIO m, MonadError IOError m) => String -> a -> m (List Element)
-    covering
-    select1 : (HasIO m, MonadError IOError m) => String -> a -> m (Maybe Element)
-
-
-Nodeable Html where
-    select css doc = do
-        Right xs <- liftIO $ Duskull.Scraper.Html.select css doc
-              | Left e => throwError $ MkIOError e
-        pure xs
-
-    select1 css doc = do
-        Right x <- liftIO $ Duskull.Scraper.Html.select1 css doc
-              | Left e => throwError $ MkIOError e
-        pure x
-
-Nodeable Element where
-    select css el = do
-        Right xs <- liftIO $ Duskull.Scraper.Element.select css el
-              | Left e => throwError $ MkIOError e
-        pure xs
-
-    select1 css el = do
-        Right x <- liftIO $ Duskull.Scraper.Element.select1 css el
-              | Left e => throwError $ MkIOError e
-        pure x
+covering
+select : (HasIO m, MonadError IOError m, MonadReader Html m)
+         => String -> m (List Element)
+select css = do
+    Right xs <- liftIO $ Duskull.Scraper.Html.select css !ask
+          | Left e => throwError $ MkIOError e
+    pure xs
 
 export
 runDocument : HasIO m => String -> ReaderT Html m a -> m a
@@ -60,12 +38,12 @@ runFragment str x = do
     runReaderT doc x
 
 export
-attr : MonadReader Element m => String -> m (Maybe String)
-attr name = pure $ elementAttr name !ask
+attr : String -> Element -> Maybe String
+attr = elementAttr
 
 export
-attr' : (MonadReader Element m, MonadError IOError m) => String -> m String
-attr' name =
-    case !(attr name) of
+attr' : MonadError IOError m => String -> Element -> m String
+attr' name el =
+    case attr name el of
         Just a => pure a
         Nothing => throwError $ MkIOError $ "属性(" ++ name ++ ")不存在！"
