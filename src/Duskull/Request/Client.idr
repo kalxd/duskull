@@ -29,9 +29,11 @@ dbg (MkClient ptr) = primIO $ prim__clientDbg ptr
 free : HasIO io => Ptr ClientPtr -> io ()
 free = primIO . prim__clientFree
 
+export
 get : String -> Either String Client
 get url = MkClient <$> (unpackResult $ prim__clientNew url)
 
+export
 text : HasIO io => (1 _ : Client) -> io (Either String String)
 text (MkClient ptr) = do
     rsp <- primIO $ prim__clientText ptr
