@@ -21,7 +21,7 @@ prim__clientFree : Ptr ClientPtr -> PrimIO ()
 prim__clientNew : String -> Ptr (Result AnyPtr)
 
 %foreign (loadlib "client_text")
-prim__clientText : Ptr ClientPtr -> PrimIO (Result String)
+prim__clientText : Ptr ClientPtr -> PrimIO (Ptr (Result AnyPtr))
 
 dbg : HasIO io => Client -> io ()
 dbg (MkClient ptr) = primIO $ prim__clientDbg ptr
@@ -32,8 +32,16 @@ free = primIO . prim__clientFree
 get : String -> Either String Client
 get url = MkClient <$> (unpackResult $ prim__clientNew url)
 
+text : HasIO io => (1 _ : Client) -> io (Either String String)
+text (MkClient ptr) = do
+    rsp <- primIO $ prim__clientText ptr
+    case unpackResult rsp of
+        Left e => pure $ Left e
+        Right t => pure $ Right $ castToString t
+
 main : IO ()
 main = do
-   let Right client = get "http://bin.com"
+   let Right client = get "https://httpbin.io/json"
        | Left e => putStrLn e
-   dbg client
+   rsp <- text client
+   printLn rsp

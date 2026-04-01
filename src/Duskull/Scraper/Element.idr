@@ -19,9 +19,6 @@ record Element where
     constructor MkElement
     ptr : GCPtr ElementPtr
 
-%foreign (loadlib "to_str")
-prim__toStr : Ptr String -> String
-
 %foreign (loadlib "element_free")
 prim__elementFree : Ptr ElementPtr -> PrimIO ()
 
