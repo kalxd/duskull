@@ -21,12 +21,14 @@ modules = Duskull.FFI
         , Duskull.Scraper.Element
         , Duskull.Scraper.Html
         , Duskull.Scraper
+        , Duskull.Request.Url
+        , Duskull.Request.Client
 
 -- main file (i.e. file to load at REPL)
-main = Main
+-- main = Main
 
 -- name of executable
-executable = "main.rkt"
+-- executable = "main.rkt"
 -- opts =
 sourcedir = "src"
 -- builddir =
