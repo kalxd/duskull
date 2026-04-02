@@ -1,4 +1,4 @@
-module Duskull.Request.Client
+module Duskull.Scraper.Request
 
 import Duskull.FFI
 import Duskull.Error

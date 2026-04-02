@@ -21,9 +21,9 @@ modules = Duskull.FFI
         , Duskull.Scraper.Selector
         , Duskull.Scraper.Element
         , Duskull.Scraper.Html
+        , Duskull.Scraper.Url
+        , Duskull.Scraper.Request
         , Duskull.Scraper
-        , Duskull.Request.Url
-        , Duskull.Request.Client
 
 -- main file (i.e. file to load at REPL)
 -- main = Main

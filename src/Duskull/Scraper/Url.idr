@@ -1,4 +1,4 @@
-module Duskull.Request.Url
+module Duskull.Scraper.Url
 
 import Duskull.FFI
 
