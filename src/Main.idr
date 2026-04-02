@@ -1,29 +1,21 @@
 module Main
 
--- import Duskull.Trace
--- import Duskull.JSON
-import Duskull.FFI
+data Lin : Type -> Type where
+    MkLin : (1 _ : a) -> Lin a
 
-{-
-record User where
-    constructor MkUser
-    name : String
-    age : Double
+data Unr : Type -> Type where
+    MkUnr : a -> Unr a
 
-rawInput : String
-rawInput = ##"""
-{"name": "你好啊", "age": ""}
-"""##
+getLin : (1 _ : Lin a) -> a
+getLin (MkLin x) = x
 
-FromJSON User where
-    fromJSON = withObject "user" $ \o => do
-        name <- o .: "name"
-        age <- o .: "age"
-        pure $ MkUser name age
-
-Debug User where
-    debug (MkUser name age) = "User: \{debug name}, \{debug age} "
+getUnr : Unr a -> a
+getUnr (MkUnr x) = ?help_unr
 
 main : IO ()
-main = printLnDebug $ decode {a=User} rawInput
--}
+main = do
+    let a = MkLin 1
+        b = MkLin "hello"
+    printLn $ getLin a
+    printLn $ getLin a
+

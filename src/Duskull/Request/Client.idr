@@ -1,6 +1,7 @@
 module Duskull.Request.Client
 
 import Duskull.FFI
+import Duskull.Error
 
 %default total
 
