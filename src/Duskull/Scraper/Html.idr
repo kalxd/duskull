@@ -53,7 +53,7 @@ mkFragment css = let ptr = prim__parseFragment css
 dbg : Html -> IO ()
 dbg (MkHtml ptr) = primIO $ prim__dbg ptr
 
-freeSelect : Ptr SelectPtr -> IO ()
+freeSelect : HasIO io => Ptr SelectPtr -> io ()
 freeSelect = primIO . prim__htmlSelectFree
 
 covering
@@ -68,7 +68,7 @@ reduceSelectToList acc ptr = do
 
 covering
 export
-select : String -> Html -> IO (Either SomeError (List Element))
+select : HasIO io => String -> Html -> io (Either SomeError (List Element))
 select css (MkHtml htmlPtr) = do
     selector <- mkSelector css
     case selector of
