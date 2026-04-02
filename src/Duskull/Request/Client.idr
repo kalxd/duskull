@@ -21,6 +21,9 @@ prim__clientFree : Ptr ClientPtr -> PrimIO ()
 %foreign (loadlib "client_make_request")
 prim__clientMakeRequest : String -> Ptr (Result AnyPtr)
 
+%foreign (loadlib "client_set_header")
+prim__clientSetHeader : String -> String -> Ptr ClientPtr -> Ptr ClientPtr
+
 %foreign (loadlib "client_text")
 prim__clientText : Ptr ClientPtr -> PrimIO (Ptr (Result AnyPtr))
 
@@ -43,6 +46,9 @@ get url f =
         | Left e => pure $ Left e
     in f client
 
+setHeader : String -> String -> (1 _: Client) -> Client
+setHeader key value (MkClient ptr) = MkClient $ prim__clientSetHeader key value ptr
+
 export
 text : HasIO io => (1 _ : Client) -> io (Either String String)
 text (MkClient ptr) = do
@@ -50,3 +56,11 @@ text (MkClient ptr) = do
     case unpackResult rsp of
         Left e => pure $ Left e
         Right t => pure $ Right $ castToString t
+
+main : IO ()
+main = do
+    rsp <- get "http://httpbin.io/headers" $ \req => do
+        let req = setHeader "YES" "SB" req
+            req = setHeader "SB" "YES" req
+        text req
+    printLn rsp
