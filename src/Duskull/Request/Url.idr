@@ -6,7 +6,7 @@ import Duskull.FFI
 
 data UrlPtr : Type where
 
-export
+public export
 record Url where
     constructor MkUrl
     ptr : GCPtr UrlPtr
@@ -26,6 +26,7 @@ free = primIO . prim__urlFree
 dbg : Url -> IO ()
 dbg (MkUrl url) = primIO $ prim__urlDbg url
 
+export
 newUrl : HasIO io => String -> io (Either String Url)
 newUrl input = do
     let url = prim__urlParse input
