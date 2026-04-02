@@ -46,6 +46,7 @@ get url f =
         | Left e => pure $ Left e
     in f client
 
+export
 setHeader : String -> String -> (1 _: Client) -> Client
 setHeader key value (MkClient ptr) = MkClient $ prim__clientSetHeader key value ptr
 
@@ -59,8 +60,6 @@ text (MkClient ptr) = do
 
 main : IO ()
 main = do
-    rsp <- get "http://httpbin.io/headers" $ \req => do
-        let req = setHeader "YES" "SB" req
-            req = setHeader "SB" "YES" req
-        text req
-    printLn rsp
+    Right rsp <- get "http://httpbin.io/headers" text
+    | Left e => putStrLn e
+    putStrLn rsp
