@@ -8,9 +8,15 @@ data SomeError : Type where
     OtherError : String -> SomeError
 
 export
+Show SomeError where
+    show (IOError str) = "IOError: " ++ str
+    show (OtherError str) = "OtherError: " ++ str
+
+export
 ioError : Show e => e -> SomeError
 ioError = IOError . show
 
 export
 otherError : Show e => e -> SomeError
 otherError = OtherError . show
+

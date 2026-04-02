@@ -39,7 +39,7 @@ free : Ptr ElementPtr -> IO ()
 free = primIO . prim__elementFree
 
 export
-castToElement : Ptr ElementPtr -> IO Element
+castToElement : HasIO io => Ptr ElementPtr -> io Element
 castToElement ptr = MkElement <$> onCollect ptr free
 
 export
@@ -59,7 +59,7 @@ elementSrc : Element -> Maybe String
 elementSrc = elementAttr "src"
 
 covering
-reduceSelectToList : List Element -> Ptr SelectPtr -> IO (List Element)
+reduceSelectToList : HasIO io => List Element -> Ptr SelectPtr -> io (List Element)
 reduceSelectToList acc ptr = do
     let item = prim__elementSelectNext ptr
     if prim__nullPtr item == 1

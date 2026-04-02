@@ -1,6 +1,7 @@
 module Duskull.Scraper.Html
 
 import Duskull.FFI
+import Duskull.Error
 import Duskull.Scraper.Selector
 import Duskull.Scraper.Element
 
@@ -56,7 +57,7 @@ freeSelect : Ptr SelectPtr -> IO ()
 freeSelect = primIO . prim__htmlSelectFree
 
 covering
-reduceSelectToList : List Element -> Ptr SelectPtr -> IO (List Element)
+reduceSelectToList : HasIO io => List Element -> Ptr SelectPtr -> io (List Element)
 reduceSelectToList acc ptr = do
     let item = prim__htmlSelectNext ptr
     case prim__nullPtr item of
@@ -67,11 +68,11 @@ reduceSelectToList acc ptr = do
 
 covering
 export
-select : String -> Html -> IO (Either String (List Element))
+select : String -> Html -> IO (Either SomeError (List Element))
 select css (MkHtml htmlPtr) = do
     selector <- mkSelector css
     case selector of
-        Left e => pure $ Left e
+        Left e => pure $ Left $ otherError e
         Right (MkSelector selectorPtr) => do
             let select = prim__htmlSelect selectorPtr htmlPtr
             xs <- reduceSelectToList [] select
@@ -80,11 +81,11 @@ select css (MkHtml htmlPtr) = do
 
 covering
 export
-select1 : String -> Html -> IO (Either String (Maybe Element))
+select1 : HasIO io => String -> Html -> io (Either SomeError (Maybe Element))
 select1 css (MkHtml htmlPtr) = do
     selector <- mkSelector css
     case selector of
-        Left e => pure $ Left e
+        Left e => pure $ Left $ otherError e
         Right (MkSelector selectorPtr) => do
             let select = prim__htmlSelect selectorPtr htmlPtr
                 item = prim__htmlSelectNext select
@@ -100,7 +101,7 @@ main = do
     """
     el <- select1 "h1" doc
     case el of
-        Left e => putStrLn e
+        Left e => putStrLn $ show e
         Right el => do
             printLn $ elementId =<< el
             printLn $ elementAttr "go" =<< el
