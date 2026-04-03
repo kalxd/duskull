@@ -20,6 +20,12 @@ prim__urlDbg : GCPtr UrlPtr -> PrimIO ()
 %foreign (loadlib "url_parse")
 prim__urlParse : String -> Ptr (Result AnyPtr)
 
+%foreign loadlib "url_contain_host"
+prim__urlContainHost : String -> GCPtr UrlPtr -> Bits8
+
+%foreign loadlib "url_file_path"
+prim__urlFilePath : GCPtr UrlPtr -> Ptr String
+
 free : Ptr UrlPtr -> IO ()
 free = primIO . prim__urlFree
 
@@ -34,8 +40,18 @@ newUrl input = do
         Left e => pure $ Left e
         Right url => Right . MkUrl <$> onCollect url free
 
+containHost : String -> Url -> Bool
+containHost host (MkUrl ptr) = prim__urlContainHost host ptr == 1
+
+asFilePath : Url -> Maybe String
+asFilePath (MkUrl ptr) =
+    let p = prim__urlFilePath ptr
+    in castMaybeString p
+
 main : IO ()
 main = do
-    Right url <- newUrl "http://badi.com"
+    Right url <- newUrl "http://badi.com/hello/my/world.png"
           | Left e => putStrLn e
     dbg url
+    printLn $ containHost "badi.com" url
+    printLn $ asFilePath url
