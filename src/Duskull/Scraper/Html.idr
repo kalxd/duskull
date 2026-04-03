@@ -72,7 +72,7 @@ select : HasIO io => String -> Html -> io (Either SomeError (List Element))
 select css (MkHtml htmlPtr) = do
     selector <- mkSelector css
     case selector of
-        Left e => pure $ Left $ otherError e
+        Left e => pure $ Left e
         Right (MkSelector selectorPtr) => do
             let select = prim__htmlSelect selectorPtr htmlPtr
             xs <- reduceSelectToList [] select
@@ -85,7 +85,7 @@ select1 : HasIO io => String -> Html -> io (Either SomeError (Maybe Element))
 select1 css (MkHtml htmlPtr) = do
     selector <- mkSelector css
     case selector of
-        Left e => pure $ Left $ otherError e
+        Left e => pure $ Left e
         Right (MkSelector selectorPtr) => do
             let select = prim__htmlSelect selectorPtr htmlPtr
                 item = prim__htmlSelectNext select
@@ -106,4 +106,3 @@ main = do
             printLn $ elementId =<< el
             printLn $ elementAttr "go" =<< el
             printLn $ elementAttr "unknown" =<< el
-

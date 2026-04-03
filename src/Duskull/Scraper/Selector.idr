@@ -1,6 +1,7 @@
 module Duskull.Scraper.Selector
 
 import Duskull.FFI
+import Duskull.Error
 
 %default total
 
@@ -34,15 +35,15 @@ free = primIO . prim__selectorFree
 ||| ```
 |||
 export
-mkSelector : HasIO io => String -> io (Either String Selector)
+mkSelector : HasIO io => String -> io (Either SomeError Selector)
 mkSelector css =
     case unpackResult $ prim__selectorCreate css of
         Right selector => (Right . MkSelector) <$> onCollect selector free
-        Left e => pure $ Left e
+        Left e => pure $ Left $ parseError e
 
 main : IO ()
 main =
     do s <- mkSelector "button.btn"
        case s of
            Right selector => dbg selector
-           Left e => putStrLn e
+           Left e => printLn e

@@ -46,7 +46,7 @@ get : HasIO io
       -> io (Either SomeError a)
 get url f =
     let Right client = makeRequest url
-        | Left e => pure $ Left $ otherError e
+        | Left e => pure $ Left $ parseError e
     in f client
 
 export

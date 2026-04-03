@@ -1,6 +1,7 @@
 module Duskull.Scraper.Element
 
 import Duskull.FFI
+import Duskull.Error
 import Duskull.Scraper.Selector
 
 %default total
@@ -70,7 +71,7 @@ reduceSelectToList acc ptr = do
 
 covering
 export
-select : String -> Element -> IO (Either String (List Element))
+select : String -> Element -> IO (Either SomeError (List Element))
 select css (MkElement elementPtr) = do
     selector <- mkSelector css
     case selector of
@@ -80,7 +81,7 @@ select css (MkElement elementPtr) = do
             Right <$> reduceSelectToList [] selectPtr
 
 export
-select1 : String -> Element -> IO (Either String (Maybe Element))
+select1 : String -> Element -> IO (Either SomeError (Maybe Element))
 select1 css (MkElement elementPtr) = do
     selector <- mkSelector css
     case selector of
