@@ -24,6 +24,7 @@ modules = Duskull.FFI
         , Duskull.Scraper.Url
         , Duskull.Scraper.Request
         , Duskull.Scraper
+        , Duskull.FS
 
 -- main file (i.e. file to load at REPL)
 -- main = Main
