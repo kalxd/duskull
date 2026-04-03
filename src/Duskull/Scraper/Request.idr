@@ -27,6 +27,9 @@ prim__clientSetHeader : String -> String -> Ptr ClientPtr -> Ptr ClientPtr
 %foreign (loadlib "client_text")
 prim__clientText : Ptr ClientPtr -> PrimIO (Ptr (Result AnyPtr))
 
+%foreign (loadlib "client_download")
+prim__clientDownload : String -> Ptr ClientPtr -> PrimIO (Ptr String)
+
 dbg : HasIO io => Client -> io ()
 dbg (MkClient ptr) = primIO $ prim__clientDbg ptr
 
@@ -39,8 +42,8 @@ makeRequest url = MkClient <$> (unpackResult $ prim__clientMakeRequest url)
 export
 get : HasIO io
       => String
-      -> (_ : (1 _: Client) -> io (Either String String))
-      -> io (Either String String)
+      -> (_ : (1 _: Client) -> io (Either String a))
+      -> io (Either String a)
 get url f =
     let Right client = makeRequest url
         | Left e => pure $ Left e
@@ -58,8 +61,16 @@ text (MkClient ptr) = do
         Left e => pure $ Left e
         Right t => pure $ Right $ castToString t
 
+export
+download : HasIO io => String -> (1 _ : Client) -> io (Either String ())
+download filepath (MkClient ptr) = do
+    val <- primIO $ prim__clientDownload filepath ptr
+    if prim__nullPtr val == 1
+       then pure $ Right ()
+       else pure $ Left $ castToString val
+
 main : IO ()
 main = do
-    Right rsp <- get "http://httpbin.io/headers" text
+    Right rsp <- get "http://httpbin.io/image/png" $ download "sample.png"
     | Left e => putStrLn e
-    putStrLn rsp
+    pure ()
