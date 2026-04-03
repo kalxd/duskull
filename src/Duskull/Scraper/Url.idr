@@ -50,7 +50,7 @@ asFilePath (MkUrl ptr) =
 
 main : IO ()
 main = do
-    Right url <- newUrl "http://badi.com/hello/my/world.png"
+    Right url <- newUrl "http://badi.com/hello/my/world"
           | Left e => putStrLn e
     dbg url
     printLn $ containHost "badi.com" url
