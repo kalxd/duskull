@@ -42,11 +42,11 @@ makeRequest url = MkClient <$> (unpackResult $ prim__clientMakeRequest url)
 export
 get : HasIO io
       => String
-      -> (_ : (1 _: Client) -> io (Either String a))
-      -> io (Either String a)
+      -> (_ : (1 _: Client) -> io (Either SomeError a))
+      -> io (Either SomeError a)
 get url f =
     let Right client = makeRequest url
-        | Left e => pure $ Left e
+        | Left e => pure $ Left $ otherError e
     in f client
 
 export
@@ -54,23 +54,23 @@ setHeader : String -> String -> (1 _: Client) -> Client
 setHeader key value (MkClient ptr) = MkClient $ prim__clientSetHeader key value ptr
 
 export
-text : HasIO io => (1 _ : Client) -> io (Either String String)
+text : HasIO io => (1 _ : Client) -> io (Either SomeError String)
 text (MkClient ptr) = do
     rsp <- primIO $ prim__clientText ptr
     case unpackResult rsp of
-        Left e => pure $ Left e
+        Left e => pure $ Left $ ioError e
         Right t => pure $ Right $ castToString t
 
 export
-download : HasIO io => String -> (1 _ : Client) -> io (Either String ())
+download : HasIO io => String -> (1 _ : Client) -> io (Either SomeError ())
 download filepath (MkClient ptr) = do
     val <- primIO $ prim__clientDownload filepath ptr
     if prim__nullPtr val == 1
        then pure $ Right ()
-       else pure $ Left $ castToString val
+       else pure $ Left $ ioError $ castToString val
 
 main : IO ()
 main = do
     Right rsp <- get "http://httpbin.io/image/png" $ download "sample.png"
-    | Left e => putStrLn e
+    | Left e => printLn e
     pure ()
