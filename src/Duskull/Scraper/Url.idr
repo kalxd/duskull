@@ -20,6 +20,12 @@ prim__urlDbg : GCPtr UrlPtr -> PrimIO ()
 %foreign (loadlib "url_parse")
 prim__urlParse : String -> Ptr (Result AnyPtr)
 
+%foreign loadlib "url_unsafe_parse"
+prim__urlUnsafeParse : String -> Ptr UrlPtr
+
+%foreign loadlib "url_set_path"
+prim__urlSetPath : String -> GCPtr UrlPtr -> Ptr UrlPtr
+
 %foreign loadlib "url_contain_host"
 prim__urlContainHost : String -> GCPtr UrlPtr -> Bits8
 
@@ -40,6 +46,12 @@ newUrl input = do
         Left e => pure $ Left e
         Right url => Right . MkUrl <$> onCollect url free
 
+export
+setPath : HasIO io => String -> Url -> io Url
+setPath path (MkUrl ptr) =
+    let newurl = prim__urlSetPath path ptr
+    in MkUrl <$> onCollect newurl free
+
 containHost : String -> Url -> Bool
 containHost host (MkUrl ptr) = prim__urlContainHost host ptr == 1
 
@@ -48,10 +60,17 @@ asFilePath (MkUrl ptr) =
     let p = prim__urlFilePath ptr
     in castMaybeString p
 
+namespace Unsafe
+    export
+    newUrl : HasIO io => String -> io Url
+    newUrl url = let x = prim__urlUnsafeParse url
+                 in MkUrl <$> onCollect x free
+
 main : IO ()
 main = do
-    Right url <- newUrl "http://badi.com/hello/my/world"
-          | Left e => putStrLn e
+    url <- newUrl "http://baidu.com/your/are/sb"
     dbg url
-    printLn $ containHost "badi.com" url
-    printLn $ asFilePath url
+    nextUrl <- setPath "not/sb" url
+    dbg url
+    dbg nextUrl
+
