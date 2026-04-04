@@ -11,11 +11,11 @@ record Url where
     constructor MkUrl
     ptr : GCPtr UrlPtr
 
+%foreign (loadlib "url_show")
+prim__urlShow : GCPtr UrlPtr -> String
+
 %foreign (loadlib "url_free")
 prim__urlFree : Ptr UrlPtr -> PrimIO ()
-
-%foreign (loadlib "url_dbg")
-prim__urlDbg : GCPtr UrlPtr -> PrimIO ()
 
 %foreign (loadlib "url_parse")
 prim__urlParse : String -> Ptr (Result AnyPtr)
@@ -26,8 +26,8 @@ prim__urlUnsafeParse : String -> Ptr UrlPtr
 %foreign loadlib "url_set_path"
 prim__urlSetPath : String -> GCPtr UrlPtr -> Ptr UrlPtr
 
-%foreign loadlib "url_contain_host"
-prim__urlContainHost : String -> GCPtr UrlPtr -> Bits8
+%foreign loadlib "url_has_same_host"
+prim__urlHasSameHost : GCPtr UrlPtr -> GCPtr UrlPtr -> Bits8
 
 %foreign loadlib "url_file_path"
 prim__urlFilePath : GCPtr UrlPtr -> Ptr String
@@ -35,8 +35,8 @@ prim__urlFilePath : GCPtr UrlPtr -> Ptr String
 free : Ptr UrlPtr -> IO ()
 free = primIO . prim__urlFree
 
-dbg : Url -> IO ()
-dbg (MkUrl url) = primIO $ prim__urlDbg url
+show : Url -> String
+show (MkUrl url) = prim__urlShow url
 
 export
 newUrl : HasIO io => String -> io (Either String Url)
@@ -52,9 +52,12 @@ setPath path (MkUrl ptr) =
     let newurl = prim__urlSetPath path ptr
     in MkUrl <$> onCollect newurl free
 
-containHost : String -> Url -> Bool
-containHost host (MkUrl ptr) = prim__urlContainHost host ptr == 1
+export
+hasSameHost : Url -> Url -> Bool
+hasSameHost (MkUrl targetPtr) (MkUrl sourcePtr) =
+    prim__urlHasSameHost targetPtr sourcePtr == 1
 
+export
 asFilePath : Url -> Maybe String
 asFilePath (MkUrl ptr) =
     let p = prim__urlFilePath ptr
@@ -66,11 +69,14 @@ namespace Unsafe
     newUrl url = let x = prim__urlUnsafeParse url
                  in MkUrl <$> onCollect x free
 
+Show Url where
+    showPrec d url = showCon d "URL" $ showArg (Url.show url)
+
 main : IO ()
 main = do
     url <- newUrl "http://baidu.com/your/are/sb"
-    dbg url
+    printLn url
     nextUrl <- setPath "not/sb" url
-    dbg url
-    dbg nextUrl
+    printLn url
+    printLn nextUrl
 
