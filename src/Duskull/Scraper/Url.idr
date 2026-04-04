@@ -70,7 +70,7 @@ namespace Unsafe
                  in MkUrl <$> onCollect x free
 
 Show Url where
-    showPrec d url = showCon d "URL" $ showArg (Url.show url)
+    show = Url.show
 
 main : IO ()
 main = do
