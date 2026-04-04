@@ -65,16 +65,16 @@ asFilePath (MkUrl ptr) =
 
 namespace Unsafe
     export
-    newUrl : HasIO io => String -> io Url
+    newUrl : String -> Url
     newUrl url = let x = prim__urlUnsafeParse url
-                 in MkUrl <$> onCollect x free
+                 in MkUrl $ unsafePerformIO $ onCollect x free
 
 Show Url where
     show = Url.show
 
 main : IO ()
 main = do
-    url <- newUrl "http://baidu.com/your/are/sb"
+    let url = newUrl "http://baidu.com/your/are/sb"
     printLn url
     nextUrl <- setPath "not/sb" url
     printLn url
