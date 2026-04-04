@@ -4,6 +4,7 @@ import Duskull.FFI
 
 %default total
 
+public export
 data UrlPtr : Type where
 
 public export
@@ -64,6 +65,10 @@ asFilePath (MkUrl ptr) =
     in castMaybeString p
 
 namespace Unsafe
+    ||| 创建一条Url。
+    ||| # 崩溃
+    ||| 如果 `url` 不是合法地址，会使整个程序panic退出！
+    ||| @ url 合法url
     export
     newUrl : String -> Url
     newUrl url = let x = prim__urlUnsafeParse url

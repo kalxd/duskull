@@ -2,75 +2,80 @@ module Duskull.Scraper.Request
 
 import Duskull.FFI
 import Duskull.Error
+import Duskull.Scraper.Url
 
 %default total
 
-data ClientPtr : Type where
+data RequestPtr : Type where
 
 export
-record Client where
-    constructor MkClient
-    ptr : Ptr ClientPtr
+record Request where
+    constructor MkRequest
+    ptr : Ptr RequestPtr
 
-%foreign (loadlib "client_dbg")
-prim__clientDbg : Ptr ClientPtr -> PrimIO ()
+%foreign loadlib "request_free"
+prim__requestFree : Ptr RequestPtr -> PrimIO ()
 
-%foreign (loadlib "client_free")
-prim__clientFree : Ptr ClientPtr -> PrimIO ()
+free : HasIO io => Ptr RequestPtr -> io ()
+free = primIO . prim__requestFree
 
-%foreign (loadlib "client_make_request")
-prim__clientMakeRequest : String -> Ptr (Result AnyPtr)
+%foreign loadlib "request_make_get"
+prim__requestMakeGet : GCPtr UrlPtr -> Ptr RequestPtr
 
-%foreign (loadlib "client_set_header")
-prim__clientSetHeader : String -> String -> Ptr ClientPtr -> Ptr ClientPtr
+makeGet : Url -> Request
+makeGet (MkUrl ptr) = MkRequest $ prim__requestMakeGet ptr
 
-%foreign (loadlib "client_text")
-prim__clientText : Ptr ClientPtr -> PrimIO (Ptr (Result AnyPtr))
+%foreign loadlib "request_set_header"
+prim__requestSetHeader : String -> String -> (1 _ : Ptr RequestPtr) -> Ptr RequestPtr
 
-%foreign (loadlib "client_download")
-prim__clientDownload : String -> Ptr ClientPtr -> PrimIO (Ptr String)
+export
+setHeader : String -> String -> (1 _ : Request) -> Request
+setHeader key value (MkRequest ptr) =
+    let req = prim__requestSetHeader key value ptr
+    in MkRequest req
 
-dbg : HasIO io => Client -> io ()
-dbg (MkClient ptr) = primIO $ prim__clientDbg ptr
+%foreign loadlib "request_text"
+prim__requestText : (1 _ : Ptr RequestPtr) -> PrimIO (Ptr (Result AnyPtr))
 
-free : HasIO io => Ptr ClientPtr -> io ()
-free = primIO . prim__clientFree
+export
+text : HasIO io => (1 _ : Request) -> io (Either SomeError String)
+text (MkRequest ptr) = do
+    val <- primIO $ prim__requestText ptr
+    case unpackResult val of
+        Left e => pure $ Left $ ioError e
+        Right val => pure $ Right $ castToString val
 
-makeRequest : String -> Either String Client
-makeRequest url = MkClient <$> (unpackResult $ prim__clientMakeRequest url)
+%foreign loadlib "request_download"
+prim__requestDownload : String -> (1 _ : Ptr RequestPtr) -> PrimIO (Ptr String)
+
+export
+download : HasIO io => String -> (1 _ : Request) -> io (Either SomeError ())
+download filepath (MkRequest ptr) = do
+    val <- primIO $ prim__requestDownload filepath ptr
+    case castMaybeString val of
+        Just e => pure $ Left $ ioError e
+        _ => pure $ Right ()
+
+%foreign loadlib "request_show"
+prim__requestShow : Ptr RequestPtr -> String
+
+show : Request -> String
+show (MkRequest ptr) = prim__requestShow ptr
 
 export
 get : HasIO io
-      => String
-      -> (_ : (1 _: Client) -> io (Either SomeError a))
+      => Url
+      -> (_ : (1 _: Request) -> io (Either SomeError a))
       -> io (Either SomeError a)
-get url f =
-    let Right client = makeRequest url
-        | Left e => pure $ Left $ parseError e
-    in f client
+get url f = f $ makeGet url
 
-export
-setHeader : String -> String -> (1 _: Client) -> Client
-setHeader key value (MkClient ptr) = MkClient $ prim__clientSetHeader key value ptr
-
-export
-text : HasIO io => (1 _ : Client) -> io (Either SomeError String)
-text (MkClient ptr) = do
-    rsp <- primIO $ prim__clientText ptr
-    case unpackResult rsp of
-        Left e => pure $ Left $ ioError e
-        Right t => pure $ Right $ castToString t
-
-export
-download : HasIO io => String -> (1 _ : Client) -> io (Either SomeError ())
-download filepath (MkClient ptr) = do
-    val <- primIO $ prim__clientDownload filepath ptr
-    if prim__nullPtr val == 1
-       then pure $ Right ()
-       else pure $ Left $ ioError $ castToString val
+Show Request where
+    show = Request.show
 
 main : IO ()
 main = do
-    Right rsp <- get "http://httpbin.io/image/png" $ download "sample.png"
+    let url = newUrl "http://httpbin.io/image/png"
+    Right rsp <- get url $ download "sample.png"
     | Left e => printLn e
     pure ()
+
