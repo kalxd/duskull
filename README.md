@@ -6,4 +6,4 @@
 
 个人自用工具库。
 
-依赖于[golbat](https://github.com/kalxd/golbat)。
+依赖[golbat](https://github.com/kalxd/golbat)。
