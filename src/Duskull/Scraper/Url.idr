@@ -1,6 +1,7 @@
 module Duskull.Scraper.Url
 
 import Duskull.FFI
+import Duskull.Error
 
 %default total
 
@@ -40,11 +41,11 @@ show : Url -> String
 show (MkUrl url) = prim__urlShow url
 
 export
-newUrl : HasIO io => String -> io (Either String Url)
+newUrl : HasIO io => String -> io (Either SomeError Url)
 newUrl input = do
     let url = prim__urlParse input
     case unpackResult url of
-        Left e => pure $ Left e
+        Left e => pure $ Left $ parseError e
         Right url => Right . MkUrl <$> onCollect url free
 
 export
