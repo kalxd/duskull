@@ -37,69 +37,66 @@ prim__htmlSelectNext: Ptr SelectPtr -> Ptr ElementPtr
 %foreign (loadlib "html_dbg")
 prim__dbg : GCPtr HtmlPtr -> PrimIO ()
 
-free : Ptr HtmlPtr -> IO ()
+free : HasIO io => Ptr HtmlPtr -> io ()
 free = primIO . prim__free
 
 export
-mkDocument : HasIO io => String -> io Html
+mkDocument : String -> Html
 mkDocument css = let ptr = prim__parseDocument css
-                 in MkHtml <$> onCollect ptr free
+                 in MkHtml $ unsafePerformIO $ onCollect ptr free
 
 export
-mkFragment : HasIO io => String -> io Html
+mkFragment : String -> Html
 mkFragment css = let ptr = prim__parseFragment css
-                 in MkHtml <$> onCollect ptr free
+                 in MkHtml $ unsafePerformIO $ onCollect ptr free
 
-dbg : Html -> IO ()
+dbg : HasIO io => Html -> io ()
 dbg (MkHtml ptr) = primIO $ prim__dbg ptr
 
 freeSelect : HasIO io => Ptr SelectPtr -> io ()
 freeSelect = primIO . prim__htmlSelectFree
 
 covering
-reduceSelectToList : HasIO io => List Element -> Ptr SelectPtr -> io (List Element)
-reduceSelectToList acc ptr = do
+reduceSelectToList : List Element -> Ptr SelectPtr -> List Element
+reduceSelectToList acc ptr =
     let item = prim__htmlSelectNext ptr
-    case prim__nullPtr item of
-        1 => pure acc
-        _ => do
-            el <- castToElement item
-            reduceSelectToList (acc ++ [el]) ptr
+    in if prim__nullPtr item == 1
+          then acc
+          else let el = castToElement item
+               in reduceSelectToList (acc ++ [el]) ptr
 
 covering
 export
-select : HasIO io => String -> Html -> io (Either SomeError (List Element))
-select css (MkHtml htmlPtr) = do
-    selector <- mkSelector css
-    case selector of
-        Left e => pure $ Left e
-        Right (MkSelector selectorPtr) => do
-            let select = prim__htmlSelect selectorPtr htmlPtr
-            xs <- reduceSelectToList [] select
-            freeSelect select
-            pure $ Right xs
+select : String -> Html -> Either SomeError (List Element)
+select css (MkHtml htmlPtr) =
+    let Right (MkSelector selectorPtr) = mkSelector css
+        | Left e => Left e
+        select = prim__htmlSelect selectorPtr htmlPtr
+        xs = reduceSelectToList [] select
+    in unsafePerformIO $ freeSelect select $> Right xs
 
 covering
 export
-select1 : HasIO io => String -> Html -> io (Either SomeError (Maybe Element))
-select1 css (MkHtml htmlPtr) = do
-    selector <- mkSelector css
-    case selector of
-        Left e => pure $ Left e
-        Right (MkSelector selectorPtr) => do
-            let select = prim__htmlSelect selectorPtr htmlPtr
-                item = prim__htmlSelectNext select
-            if prim__nullPtr item == 1
-                then pure $ Right Nothing
-                else Right . Just <$> castToElement item
+select1 : String -> Html -> Either SomeError (Maybe Element)
+select1 css (MkHtml htmlPtr) =
+    let Right (MkSelector selectorPtr) = mkSelector css
+        | Left e => Left e
+        select = prim__htmlSelect selectorPtr htmlPtr
+        item = prim__htmlSelectNext select
+    in if prim__nullPtr item == 1
+          then unsafePerformIO $ freeSelect select $> (Right Nothing)
+          else let el = castToElement item
+               in unsafePerformIO $ do
+                   freeSelect select
+                   pure $ Right $ Just el
 
 covering
 main : IO ()
 main = do
-    doc <- mkFragment """
+    let doc = mkFragment """
     <button id="yes" go=1>button</button>
     """
-    el <- select1 "#yes" doc
+    let el = select1 "#yes" doc
     case el of
         Left e => putStrLn $ show e
         Right el => do

@@ -25,7 +25,7 @@ prim__selectorDbg : GCPtr SelectorPtr -> PrimIO ()
 dbg : Selector -> IO ()
 dbg (MkSelector ptr) = primIO $ prim__selectorDbg ptr
 
-free : Ptr SelectorPtr -> IO ()
+free : HasIO io => Ptr SelectorPtr -> io ()
 free = primIO . prim__selectorFree
 
 ||| 创建选择器。支持css selectorg语法。
@@ -35,15 +35,14 @@ free = primIO . prim__selectorFree
 ||| ```
 |||
 export
-mkSelector : HasIO io => String -> io (Either SomeError Selector)
+mkSelector : String -> Either SomeError Selector
 mkSelector css =
-    case unpackResult $ prim__selectorCreate css of
-        Right selector => (Right . MkSelector) <$> onCollect selector free
-        Left e => pure $ Left $ parseError e
+    let Right selector = unpackResult $ prim__selectorCreate css
+        | Left e => Left $ parseError e
+    in Right . MkSelector $ unsafePerformIO $ onCollect selector free
 
 main : IO ()
-main =
-    do s <- mkSelector "button.btn"
-       case s of
-           Right selector => dbg selector
-           Left e => printLn e
+main = do
+    let Right s = mkSelector "button.btn"
+        | Left e => printLn e
+    dbg s

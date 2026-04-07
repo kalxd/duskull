@@ -31,6 +31,12 @@ prim__elementId : GCPtr ElementPtr -> Ptr String
 %foreign (loadlib "element_attr")
 prim__elementAttr : String -> GCPtr ElementPtr -> Ptr String
 
+%foreign loadlib "element_select_free"
+prim__elementSelectFree : Ptr SelectPtr -> PrimIO ()
+
+freeSelect : HasIO io => Ptr SelectPtr -> io ()
+freeSelect ptr = primIO $ prim__elementSelectFree ptr
+
 %foreign (loadlib "element_select")
 prim__elementSelect : GCPtr SelectorPtr -> GCPtr ElementPtr -> Ptr SelectPtr
 
@@ -53,8 +59,8 @@ free : Ptr ElementPtr -> IO ()
 free = primIO . prim__elementFree
 
 export
-castToElement : HasIO io => Ptr ElementPtr -> io Element
-castToElement ptr = MkElement <$> onCollect ptr free
+castToElement : Ptr ElementPtr -> Element
+castToElement ptr = MkElement $ unsafePerformIO $ onCollect ptr free
 
 export
 elementId : Element -> Maybe String
@@ -73,35 +79,32 @@ elementSrc : Element -> Maybe String
 elementSrc = elementAttr "src"
 
 covering
-reduceSelectToList : HasIO io => List Element -> Ptr SelectPtr -> io (List Element)
+reduceSelectToList : List Element -> Ptr SelectPtr -> List Element
 reduceSelectToList acc ptr = do
     let item = prim__elementSelectNext ptr
     if prim__nullPtr item == 1
-       then pure acc
-       else do
-           el <- castToElement item
-           reduceSelectToList (acc ++ [el]) ptr
+       then acc
+       else let el = castToElement item
+            in reduceSelectToList (acc ++ [el]) ptr
 
 covering
 export
-select : String -> Element -> IO (Either SomeError (List Element))
-select css (MkElement elementPtr) = do
-    selector <- mkSelector css
-    case selector of
-        Left e => pure $ Left e
-        Right (MkSelector selectorPtr) => do
-            let selectPtr = prim__elementSelect selectorPtr elementPtr
-            Right <$> reduceSelectToList [] selectPtr
+select : String -> Element -> Either SomeError (List Element)
+select css (MkElement elementPtr) =
+    let Right (MkSelector selectorPtr) = mkSelector css
+        | Left e => Left e
+        selectPtr = prim__elementSelect selectorPtr elementPtr
+        xs = reduceSelectToList [] selectPtr
+    in unsafePerformIO $ freeSelect selectPtr $> Right xs
 
 export
-select1 : String -> Element -> IO (Either SomeError (Maybe Element))
+select1 : String -> Element -> Either SomeError (Maybe Element)
 select1 css (MkElement elementPtr) = do
-    selector <- mkSelector css
-    case selector of
-        Left e => pure $ Left e
-        Right (MkSelector selectorPtr) => do
-            let selectPtr = prim__elementSelect selectorPtr elementPtr
-                item = prim__elementSelectNext selectPtr
-            if prim__nullPtr item == 1
-               then pure $ Right Nothing
-               else Right . Just <$> castToElement item
+    let Right (MkSelector selectorPtr) = mkSelector css
+        | Left e => Left e
+        selectPtr = prim__elementSelect selectorPtr elementPtr
+        item = prim__elementSelectNext selectPtr
+    if prim__nullPtr item == 1
+       then unsafePerformIO $ freeSelect selectPtr $> Right Nothing
+       else let el = Right . Just $ castToElement item
+            in unsafePerformIO $ freeSelect selectPtr $> el
