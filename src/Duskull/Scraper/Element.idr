@@ -1,5 +1,7 @@
 module Duskull.Scraper.Element
 
+import Data.Maybe
+
 import Duskull.FFI
 import Duskull.Error
 import Duskull.Scraper.Selector
@@ -34,6 +36,17 @@ prim__elementSelect : GCPtr SelectorPtr -> GCPtr ElementPtr -> Ptr SelectPtr
 
 %foreign (loadlib "element_select_next")
 prim__elementSelectNext : Ptr SelectPtr -> Ptr ElementPtr
+
+%foreign loadlib "element_text"
+prim__elementText : GCPtr ElementPtr -> Ptr String
+
+export
+elementText : Element -> Maybe String
+elementText (MkElement ptr) = castMaybeString $ prim__elementText ptr
+
+export
+elementText' : Element -> String
+elementText' = fromMaybe "" . elementText
 
 export
 free : Ptr ElementPtr -> IO ()

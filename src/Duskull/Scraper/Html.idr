@@ -99,10 +99,10 @@ main = do
     doc <- mkFragment """
     <button id="yes" go=1>button</button>
     """
-    el <- select1 "h1" doc
+    el <- select1 "#yes" doc
     case el of
         Left e => putStrLn $ show e
         Right el => do
-            printLn $ elementId =<< el
+            printLn $ elementText =<< el
             printLn $ elementAttr "go" =<< el
             printLn $ elementAttr "unknown" =<< el
