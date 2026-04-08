@@ -2,7 +2,7 @@ module Duskull.Error
 
 %default total
 
-export
+public export
 data SomeError : Type where
     IOError : String -> SomeError
     OtherError : String -> SomeError

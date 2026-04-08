@@ -108,3 +108,10 @@ select1 css (MkElement elementPtr) = do
        then unsafePerformIO $ freeSelect selectPtr $> Right Nothing
        else let el = Right . Just $ castToElement item
             in unsafePerformIO $ freeSelect selectPtr $> el
+
+%foreign loadlib "element_show"
+prim__elementShow : GCPtr ElementPtr -> String
+
+export
+Show Element where
+    show (MkElement ptr) = prim__elementShow ptr

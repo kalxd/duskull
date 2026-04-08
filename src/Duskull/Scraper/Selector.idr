@@ -19,11 +19,11 @@ prim__selectorCreate : String -> Ptr (Result AnyPtr)
 %foreign (loadlib "selector_free")
 prim__selectorFree : Ptr SelectorPtr -> PrimIO ()
 
-%foreign (loadlib "selector_dbg")
-prim__selectorDbg : GCPtr SelectorPtr -> PrimIO ()
+%foreign loadlib "selector_show"
+prim__selectorShow : GCPtr SelectorPtr -> String
 
-dbg : Selector -> IO ()
-dbg (MkSelector ptr) = primIO $ prim__selectorDbg ptr
+show : Selector -> String
+show (MkSelector ptr) = prim__selectorShow ptr
 
 free : HasIO io => Ptr SelectorPtr -> io ()
 free = primIO . prim__selectorFree
@@ -38,11 +38,15 @@ export
 mkSelector : String -> Either SomeError Selector
 mkSelector css =
     let Right selector = unpackResult $ prim__selectorCreate css
-        | Left e => Left $ parseError e
+        | Left e => Left $ ParseError $ css ++ "不是有效的css。 =>" ++ e
     in Right . MkSelector $ unsafePerformIO $ onCollect selector free
+
+export
+Show Selector where
+    show = Selector.show
 
 main : IO ()
 main = do
     let Right s = mkSelector "button.btn"
         | Left e => printLn e
-    dbg s
+    printLn s

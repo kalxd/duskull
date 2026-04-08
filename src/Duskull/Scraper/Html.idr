@@ -34,9 +34,6 @@ prim__htmlSelect : GCPtr SelectorPtr -> GCPtr HtmlPtr -> Ptr SelectPtr
 %foreign (loadlib "html_select_next")
 prim__htmlSelectNext: Ptr SelectPtr -> Ptr ElementPtr
 
-%foreign (loadlib "html_dbg")
-prim__dbg : GCPtr HtmlPtr -> PrimIO ()
-
 free : HasIO io => Ptr HtmlPtr -> io ()
 free = primIO . prim__free
 
@@ -49,9 +46,6 @@ export
 mkFragment : String -> Html
 mkFragment css = let ptr = prim__parseFragment css
                  in MkHtml $ unsafePerformIO $ onCollect ptr free
-
-dbg : HasIO io => Html -> io ()
-dbg (MkHtml ptr) = primIO $ prim__dbg ptr
 
 freeSelect : HasIO io => Ptr SelectPtr -> io ()
 freeSelect = primIO . prim__htmlSelectFree
@@ -90,6 +84,13 @@ select1 css (MkHtml htmlPtr) =
                    freeSelect select
                    pure $ Just el
 
+%foreign loadlib "html_show"
+prim__htmlShow : GCPtr HtmlPtr -> String
+
+export
+Show Html where
+    show (MkHtml ptr) = prim__htmlShow ptr
+
 covering
 main : IO ()
 main = do
@@ -98,6 +99,7 @@ main = do
     """
     let Just el = select1 "#yes" doc
         | Nothing => pure ()
+    printLn el
     printLn $ elementText el
     printLn $ elementAttr "go" el
     printLn $ elementAttr "unknown" el
