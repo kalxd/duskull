@@ -67,28 +67,28 @@ reduceSelectToList acc ptr =
 
 covering
 export
-select : String -> Html -> Either SomeError (List Element)
+select : String -> Html -> List Element
 select css (MkHtml htmlPtr) =
     let Right (MkSelector selectorPtr) = mkSelector css
-        | Left e => Left e
+        | Left e => []
         select = prim__htmlSelect selectorPtr htmlPtr
         xs = reduceSelectToList [] select
-    in unsafePerformIO $ freeSelect select $> Right xs
+    in unsafePerformIO $ freeSelect select $> xs
 
 covering
 export
-select1 : String -> Html -> Either SomeError (Maybe Element)
+select1 : String -> Html -> Maybe Element
 select1 css (MkHtml htmlPtr) =
     let Right (MkSelector selectorPtr) = mkSelector css
-        | Left e => Left e
+        | Left e => Nothing
         select = prim__htmlSelect selectorPtr htmlPtr
         item = prim__htmlSelectNext select
     in if prim__nullPtr item == 1
-          then unsafePerformIO $ freeSelect select $> (Right Nothing)
+          then unsafePerformIO $ freeSelect select $> Nothing
           else let el = castToElement item
                in unsafePerformIO $ do
                    freeSelect select
-                   pure $ Right $ Just el
+                   pure $ Just el
 
 covering
 main : IO ()
@@ -96,10 +96,8 @@ main = do
     let doc = mkFragment """
     <button id="yes" go=1>button</button>
     """
-    let el = select1 "#yes" doc
-    case el of
-        Left e => putStrLn $ show e
-        Right el => do
-            printLn $ elementText =<< el
-            printLn $ elementAttr "go" =<< el
-            printLn $ elementAttr "unknown" =<< el
+    let Just el = select1 "#yes" doc
+        | Nothing => pure ()
+    printLn $ elementText el
+    printLn $ elementAttr "go" el
+    printLn $ elementAttr "unknown" el
