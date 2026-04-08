@@ -41,12 +41,12 @@ show : Url -> String
 show (MkUrl url) = prim__urlShow url
 
 export
-newUrl : HasIO io => String -> io (Either SomeError Url)
-newUrl input = do
+newUrl : String -> Either SomeError Url
+newUrl input =
     let url = prim__urlParse input
-    case unpackResult url of
-        Left e => pure $ Left $ parseError e
-        Right url => Right . MkUrl <$> onCollect url free
+    in case unpackResult url of
+        Left e => Left $ parseError e
+        Right url => unsafePerformIO $ (Right . MkUrl) <$> onCollect url free
 
 export
 setPath : HasIO io => String -> Url -> io Url
