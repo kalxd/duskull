@@ -13,9 +13,6 @@ record Url where
     constructor MkUrl
     ptr : GCPtr UrlPtr
 
-%foreign (loadlib "url_show")
-prim__urlShow : GCPtr UrlPtr -> String
-
 %foreign (loadlib "url_free")
 prim__urlFree : Ptr UrlPtr -> PrimIO ()
 
@@ -36,9 +33,6 @@ prim__urlFilePath : GCPtr UrlPtr -> Ptr String
 
 free : Ptr UrlPtr -> IO ()
 free = primIO . prim__urlFree
-
-show : Url -> String
-show (MkUrl url) = prim__urlShow url
 
 export
 newUrl : String -> Either SomeError Url
@@ -75,8 +69,12 @@ namespace Unsafe
     newUrl url = let x = prim__urlUnsafeParse url
                  in MkUrl $ unsafePerformIO $ onCollect x free
 
+%foreign (loadlib "url_show")
+prim__urlShow : GCPtr UrlPtr -> String
+
+export
 Show Url where
-    show = Url.show
+    show (MkUrl url) = prim__urlShow url
 
 main : IO ()
 main = do
