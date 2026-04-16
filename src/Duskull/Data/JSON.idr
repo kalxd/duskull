@@ -9,6 +9,8 @@ import Control.Monad.Identity
 import Language.JSON
 import Language.JSON.Data
 
+%default total
+
 public export
 interface ToJSON (0 a: Type) where
     toJSON : a -> JSON
@@ -134,6 +136,7 @@ record User where
     name : String
     age : Double
 
+covering
 FromJSON User where
     fromJSON = withObject "user" $ \o => do
         name <- o .:. "name"
