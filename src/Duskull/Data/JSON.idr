@@ -25,6 +25,9 @@ ToJSON Double where
 ToJSON Integer where
     toJSON = toJSON . cast {to=Double}
 
+ToJSON Nat where
+    toJSON = toJSON . cast {to=Double}
+
 ToJSON a => ToJSON (List a) where
     toJSON = JArray . map toJSON
 
