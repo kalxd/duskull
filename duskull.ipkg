@@ -1,5 +1,5 @@
 package duskull
-version = 0.0.5
+version = 0.0.6
 authors = "XG.Ley"
 -- maintainers =
 -- license =
@@ -25,6 +25,7 @@ modules = Duskull.FFI
         , Duskull.Scraper.Request
         , Duskull.Scraper
         , Duskull.FS
+		, Duskull.Data.JSON
 
 -- main file (i.e. file to load at REPL)
 -- main = Main

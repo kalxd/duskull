@@ -1,4 +1,4 @@
-module Duskull.JSON
+module Duskull.Data.JSON
 
 import Data.List
 import Data.Either
@@ -9,11 +9,11 @@ import Control.Monad.Identity
 import Language.JSON
 import Language.JSON.Data
 
-import public Language.JSON as Duskull.JSON
-import public Language.JSON.Data as Duskull.JSON
-import public Control.Monad.Either as Duskull.JSON
-import public Control.Monad.Writer as Duskull.JSON
-import public Control.Monad.Identity as Duskull.JSON
+import public Language.JSON as Duskull.Data.JSON
+import public Language.JSON.Data as Duskull.Data.JSON
+import public Control.Monad.Either
+import public Control.Monad.Writer
+import public Control.Monad.Identity
 
 public export
 interface ToJSON (0 a: Type) where
