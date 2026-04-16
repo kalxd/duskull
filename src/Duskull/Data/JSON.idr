@@ -42,6 +42,7 @@ public export
 data JSONPair : Type where
      (.=) : ToJSON a => String -> a -> JSONPair
 
+export
 infix 7 .=
 
 export
@@ -98,14 +99,18 @@ export
 decode' : FromJSON a => String -> Maybe a
 decode' = eitherToMaybe . decode
 
+export
 infixl 6 .:
+
 export
 (.:) : FromJSON a => List (String, JSON) -> String -> Parser a
 obj .: key = case lookup key obj of
     Just a => fromJSON a
     _ => throwE "不存在\{key}的键！"
 
+export
 infixl 6 .:?
+
 export
 (.:?) : FromJSON a => List (String, JSON) -> String -> Parser (Maybe a)
 obj .:? key = Just <$> ((.:) obj key) `catchE` (\_ => pure Nothing)
