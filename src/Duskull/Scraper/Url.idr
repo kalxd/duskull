@@ -64,6 +64,7 @@ namespace Unsafe
     ||| # 崩溃
     ||| 如果 `url` 不是合法地址，会使整个程序panic退出！
     ||| @ url 合法url
+    %unsafe
     export
     newUrl : String -> Url
     newUrl url = let x = prim__urlUnsafeParse url
