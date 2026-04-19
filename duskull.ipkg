@@ -25,7 +25,8 @@ modules = Duskull.FFI
         , Duskull.Scraper.Request
         , Duskull.Scraper
         , Duskull.FS
-		, Duskull.Data.JSON
+        , Duskull.Control.Monad
+        , Duskull.Data.JSON
 
 -- main file (i.e. file to load at REPL)
 -- main = Main
