@@ -9,6 +9,8 @@ import Control.Monad.Identity
 import Language.JSON
 import Language.JSON.Data
 
+%hide Prelude.(.:)
+
 %default total
 
 public export
@@ -102,8 +104,8 @@ export
 infixl 6 .:.
 
 export
-(.:.) : FromJSON a => List (String, JSON) -> String -> Parser a
-obj .:. key = case lookup key obj of
+(.:) : FromJSON a => List (String, JSON) -> String -> Parser a
+obj .: key = case lookup key obj of
     Just a => fromJSON a
     _ => throwE "不存在\{key}的键！"
 
@@ -112,7 +114,7 @@ infixl 6 .:?
 
 export
 (.:?) : FromJSON a => List (String, JSON) -> String -> Parser (Maybe a)
-obj .:? key = Just <$> ((.:.) obj key) `catchE` (\_ => pure Nothing)
+obj .:? key = Just <$> ((.:) obj key) `catchE` (\_ => pure Nothing)
 
 export
 infixl 5 .:=
@@ -139,6 +141,6 @@ record User where
 covering
 FromJSON User where
     fromJSON = withObject "user" $ \o => do
-        name <- o .:. "name"
-        age <- o .:. "age"
+        name <- o .: "name"
+        age <- o .: "age"
         pure $ MkUser name age
