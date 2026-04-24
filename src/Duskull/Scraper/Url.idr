@@ -22,9 +22,6 @@ prim__urlParse : String -> Ptr (Result AnyPtr)
 %foreign loadlib "url_unsafe_parse"
 prim__urlUnsafeParse : String -> Ptr UrlPtr
 
-%foreign loadlib "url_set_path"
-prim__urlSetPath : String -> GCPtr UrlPtr -> Ptr UrlPtr
-
 %foreign loadlib "url_has_same_host"
 prim__urlHasSameHost : GCPtr UrlPtr -> GCPtr UrlPtr -> Bits8
 
@@ -39,14 +36,17 @@ newUrl : String -> Either SomeError Url
 newUrl input =
     let url = prim__urlParse input
     in case unpackResult url of
-        Left e => Left $ parseError e
+        Left e => Left $ ParseError $ "url解析错误： " ++  e
         Right url => unsafePerformIO $ (Right . MkUrl) <$> onCollect url free
 
+%foreign loadlib "url_set_path"
+prim__urlSetPath : String -> GCPtr UrlPtr -> Ptr UrlPtr
+
 export
-setPath : HasIO io => String -> Url -> io Url
+setPath : String -> Url -> Url
 setPath path (MkUrl ptr) =
     let newurl = prim__urlSetPath path ptr
-    in MkUrl <$> onCollect newurl free
+    in MkUrl $ unsafePerformIO $ onCollect newurl free
 
 export
 hasSameHost : Url -> Url -> Bool
@@ -81,7 +81,7 @@ main : IO ()
 main = do
     let url = newUrl "http://baidu.com/your/are/sb"
     printLn url
-    nextUrl <- setPath "not/sb" url
+    let nextUrl = setPath "not/sb" url
     printLn url
     printLn nextUrl
 
