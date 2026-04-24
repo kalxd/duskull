@@ -70,6 +70,12 @@ namespace Unsafe
     newUrl url = let x = prim__urlUnsafeParse url
                  in MkUrl $ unsafePerformIO $ onCollect x free
 
+    ||| 同*Unsafe.newUrl*一样不安全！
+    %unsafe
+    export
+    FromString Url where
+        fromString = newUrl
+
 %foreign (loadlib "url_show")
 prim__urlShow : GCPtr UrlPtr -> String
 
