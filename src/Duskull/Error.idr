@@ -10,9 +10,9 @@ data SomeError : Type where
 
 export
 Show SomeError where
-    show (IOError str) = "IOError: " ++ str
-    show (OtherError str) = "OtherError: " ++ str
-    show (ParseError str) = "ParseError: " ++ str
+    show (IOError str) = "IOError => " ++ str
+    show (OtherError str) = "OtherError => " ++ str
+    show (ParseError str) = "ParseError => " ++ str
 
 export
 ioError : Show e => e -> SomeError
